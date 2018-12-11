@@ -107,6 +107,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxUpDown: 1
   smooth: 0.01
-  controllerObj: {fileID: 0}
   type: 1
-  ball: {fileID: 1377557821326424, guid: ee36874fb60465d448850a22672fc258, type: 2}
+  ball: {fileID: 1059562855699788, guid: 66204704ffa9ef446b93ffc16164e589, type: 2}
+  barriers: {fileID: 0}

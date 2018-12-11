@@ -20,10 +20,13 @@ public class EndgameTrigger : MonoBehaviour {
 	}
 
 	void OnTriggerEnter(Collider other){
-		if (other.gameObject.name == "Ball") {
+		if (other.gameObject.layer == LayerMask.NameToLayer ("Ball")) {
 			controller.newStart = true;
 			controller.stopSlider = false;
 			controller.lifes = controller.lifes - 1;
+		}
+		if (other.gameObject.layer == LayerMask.NameToLayer ("ExtraBall")) {
+			Destroy (other.gameObject);
 		}
 	}
 }

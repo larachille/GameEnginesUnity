@@ -23,6 +23,27 @@ public class Controller : MonoBehaviour {
 	[SerializeField]
 	Text lifeObj;
 
+	[SerializeField]
+	Material giftBalls;
+
+	[SerializeField]
+	Material giftPoints;
+
+	[SerializeField]
+	Material giftBarrier;
+
+	[SerializeField]
+	Material giftCoins;
+
+	[SerializeField]
+	Text gameOver;
+
+	[SerializeField]
+	GameObject barrier1;
+
+	[SerializeField]
+	GameObject barrier2;
+
 	Ball ballscript;
 
 	public bool newStart;
@@ -45,6 +66,8 @@ public class Controller : MonoBehaviour {
 	Powerup gift1;
 	Powerup gift2;
 
+	Material[] materials;
+
 	// Use this for initialization
 	void Start () {
 		newStart = true;
@@ -55,10 +78,19 @@ public class Controller : MonoBehaviour {
 		speed = sliderMin;
 		ballscript = ball.GetComponent<Ball> ();
 		score = 0;
-		lifes = 3;
-		startPos = new Vector3 (5.4f, 0, -8.28f);
+		lifes = 5;
+		startPos = new Vector3 (5.4f, 0, -4.29f);
 		giftPositions = new Vector3[5];
+		MaterialSetup ();
 		GiftSetup ();
+	}
+
+	void MaterialSetup(){
+		materials = new Material[4];
+		materials [0] = giftBalls;
+		materials [1] = giftPoints;
+		materials [2] = giftBarrier;
+		materials [3] = giftCoins;
 	}
 
 	void GiftSetup(){
@@ -76,6 +108,10 @@ public class Controller : MonoBehaviour {
 		int index1 = UnityEngine.Random.Range (0, 5);
 		int index2 = UnityEngine.Random.Range (0, 5);
 
+		while (index1 == index2) {
+			index2 = UnityEngine.Random.Range (0, 5);
+		}
+
 		gift1Obj = Instantiate (giftBox, giftPositions [index1], Quaternion.identity);
 		gift2Obj = Instantiate (giftBox, giftPositions [index2], Quaternion.identity);
 
@@ -88,6 +124,16 @@ public class Controller : MonoBehaviour {
 		gift1.type = type1;
 		gift2.type = type2;
 
+		gift1.materials = materials;
+		gift2.materials = materials;
+
+		gift1.SetMaterial ();
+		gift2.SetMaterial ();
+
+		gift1.barrier1 = barrier1;
+		gift1.barrier2 = barrier2;
+		gift2.barrier1 = barrier1;
+		gift2.barrier2 = barrier2;
 	}
 	
 	// Update is called once per frame
@@ -102,6 +148,7 @@ public class Controller : MonoBehaviour {
 
 			if (Input.GetKeyDown ("space")) {
 				stopSlider = true;
+				ballscript.movesUp = true;
 				ballscript.Launch (speed);
 				newStart = false;
 			} else {
@@ -125,38 +172,49 @@ public class Controller : MonoBehaviour {
 				}
 			}
 		}
+		if (lifes == 0) {
+			gameOver.gameObject.SetActive (true);
+			stopSlider = true;
+			Destroy (gift1Obj);
+			Destroy (gift2Obj);
+			if (Input.GetKeyDown ("n")) {
+				newStart = true;
+				goDown = false;
+				stopSlider = false;
+				score = 0;
+				lifes = 5;
+				GiftSetup ();
+				gameOver.gameObject.SetActive (false);
+			}
+		}
 		scoreObj.text = "Score: " + score;
 	}
 
 	public void DestroyGift(GameObject requestObj){
-		Vector3 notThisPos;
 
 		int giftNmbr = 0;
 
 		if (requestObj == gift1Obj) {
-			notThisPos = gift1Obj.transform.position;
 			giftNmbr = 1;
 		} else {
-			notThisPos = gift2Obj.transform.position;
 			giftNmbr = 2;
 		}
 
 		requestObj.SetActive(false);
 
-		StartCoroutine ("WaitForGifts");
-
-		MakeNewGift (notThisPos,giftNmbr);
-		Destroy (requestObj);
+		StartCoroutine (WaitForGifts(giftNmbr,requestObj));
 	}
 
-	IEnumerator WaitForGifts(){
+	IEnumerator WaitForGifts(int giftNmbr,GameObject toDestroy){
 		yield return new WaitForSeconds (5);
+		MakeNewGift (giftNmbr);
+		Destroy (toDestroy);
 	}
 
-	void MakeNewGift(Vector3 forbiddenPos, int giftNmbr){
+	void MakeNewGift(int giftNmbr){
 		int index = UnityEngine.Random.Range (0, 5);
 
-		while (giftPositions[index] == forbiddenPos) {
+		while (giftPositions[index] == gift1.zeroPos || giftPositions[index] == gift2.zeroPos) {
 			index = UnityEngine.Random.Range (0, 5);
 		}
 
@@ -165,14 +223,36 @@ public class Controller : MonoBehaviour {
 			int type1 = UnityEngine.Random.Range (1, 5);
 			gift1 = gift1Obj.GetComponent<Powerup> ();
 			gift1.type = type1;
+			gift1.materials = materials;
+			gift1.SetMaterial ();
+			gift1.barrier1 = barrier1;
+			gift1.barrier2 = barrier2;
 		}
 		if (giftNmbr == 2) {
 			gift2Obj = Instantiate (giftBox, giftPositions[index], Quaternion.identity);
 			int type2 = UnityEngine.Random.Range (1, 5);
 			gift2 = gift2Obj.GetComponent<Powerup> ();
 			gift2.type = type2;
+			gift2.materials = materials;
+			gift2.SetMaterial ();
+			gift2.barrier1 = barrier1;
+			gift2.barrier2 = barrier2;
 		}
 
+	}
+
+	public void Barriers(){
+		StartCoroutine (RemoveBarriers());
+	}
+
+	IEnumerator RemoveBarriers(){
+		barrier1.SetActive (true);
+		barrier2.SetActive (true);
+
+		yield return new WaitForSeconds (5);
+
+		barrier1.SetActive (false);
+		barrier2.SetActive (false);
 	}
 
 }
